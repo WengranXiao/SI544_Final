@@ -1,0 +1,116 @@
+---
+title: "Final Project Wengran Xiao"
+output: html_document
+date: "2022-12-07"
+---
+
+## My topic
+The purpose of this project is to find the relationship between the number of infant death and the GDP per capita of each country. Theoretically, a country with low GDP per capital has less health resources, low-quality food, heavier workload and low medical techniques for the population, which will lead to more infant death.
+
+
+## Initialize two datasets
+There are two original datasets used for the project. The file data1 has a series of life expectancy data of different years of all the countries in the world. The file data2 has the GDP data of different years of countries. 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(skimr)
+library(moderndive)
+library(infer)
+library(tidyr)
+```
+
+```{r}
+data1<-read.csv("/Users/wengranxiao/Desktop/SI544/final_project/Life_Expectancy_Data.csv")
+
+data2<- read.csv("/Users/wengranxiao/Desktop/SI544/final_project/GDP.csv")
+```
+
+
+## Wrangling the data
+Only infant death of the Year 2014 and 2015 is needed and the GDP of 2015 is needed, so the two original charts should be wrangled and combined together.
+
+```{r}
+data1 <-data1 %>%
+  filter(Year=="2015"|Year=="2014")%>%
+  select(Country,infant.deaths,Year)
+```
+
+```{r}
+data2 <- data2 %>%
+  select(Country,X2015) %>%
+  rename(GDP=X2015)
+```
+
+```{r}
+finaldata <- data1 %>%
+  inner_join(data2,by="Country")
+```
+
+## Descriptive statistics
+Below are some descriptive statistics of the finaldata to help better understand the dataset.
+
+```{r}
+# Mean and median 
+mean_death <-mean(finaldata$infant.deaths)
+mean_death
+
+median_death <-median(finaldata$infant.deaths)
+median_death
+```
+```{r}
+# 25th and 75th percentile 
+pct_25 <-quantile(finaldata$infant.deaths,0.25)
+pct_25
+
+pct_75 <-quantile(finaldata$infant.deaths,0.75)
+pct_75
+```
+```{r}
+# Range of infant death
+max(finaldata$infant.deaths)-min(finaldata$infant.deaths)
+
+```
+```{r}
+# Draw a histogram to visualize the distribution of infant death
+# It shows that the majority of the infant death locates in zero.
+
+ggplot(finaldata, mapping=aes(x=infant.deaths))+
+  geom_histogram()
+  
+```
+
+
+## Fit linear model
+To better understand and visualize the relationship between infant death and GDP of a country, firstly I draw a scatterplot and draw a linear. It seems when GDP increases, the death decreases.
+
+```{r}
+ggplot(finaldata, aes(y = infant.deaths, x = GDP))+
+  geom_point()+
+  geom_smooth(method="lm")
+  
+```
+
+
+## Interpret the linear model
+Then I get a regression table to interpret the linear model. As shown in the regression table, "infant.death=-0.001*GDP+39.439". This means when GDP increases by 1, the infant death will decrease by 0.001. 
+
+```{r}
+reg_model <- lm(infant.deaths ~ GDP, data=finaldata)
+get_regression_table(reg_model)
+
+```
+
+## See the goodness of the linear model by r2
+To test the effectiveness of the linear model, I then calculate the r-square. The r2 is 0.029, which is a very small number, so this is not a good linear model.
+
+```{r}
+get_regression_summaries(reg_model)
+```
+
+## Conclusion
+We can say that infant death and the GDP per capita of a country has certain relationship, but it cannot be perfectly interpreted by linear model.
+
+
+
+
